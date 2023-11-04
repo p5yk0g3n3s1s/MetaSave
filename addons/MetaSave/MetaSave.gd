@@ -1,46 +1,51 @@
 extends Node
-##	Automatically saves/loads metadata. 
+##	Save/load metadata.
 
 
-const SAVEDATA_FOLDER: String = "user://SaveData/"
+@export var profile: String = "default"
+@export var auto: bool = true
 
-var metadata: Dictionary
+var metadata: Dictionary = {}
 
 
 func _ready() -> void:
-	check_for_savedata_folder()
-	load_metadata_from_file()
+	check_for_save_directory()
+	check_for_profile_directory(profile)
+
+	if auto:
+		load_meta()
 
 
 func _exit_tree() -> void:
-	save_metadata_to_file()
+	if auto:
+		save_meta()
 
 
-func check_for_savedata_folder() -> void:
-	var dir = DirAccess.open("user://")
-	if not dir.dir_exists(SAVEDATA_FOLDER):
-		dir.make_dir(SAVEDATA_FOLDER)
+func check_for_save_directory() -> void:
+	var user_directory: DirAccess = DirAccess.open("user://")
+	if not user_directory.dir_exists("saves"):
+		user_directory.make_dir("saves")
 
 
-func save_metadata_to_file() -> void:
-	# Read metadata
-	var metalist = get_parent().get_meta_list()
-	for metakey in metalist:
+func check_for_profile_directory(profile_name: String) -> void:
+	var save_directory: DirAccess = DirAccess.open("user://saves")
+	if not save_directory.dir_exists(profile_name):
+		save_directory.make_dir(profile_name)
+
+
+func save_meta() -> void:
+	for metakey in get_parent().get_meta_list():
 		metadata[metakey] = get_parent().get_meta(metakey)
 
-	# Save metadata
-	var path = SAVEDATA_FOLDER + get_parent().name + ".dat"
-	var file = FileAccess.open(path, FileAccess.WRITE)
+	var file_path = "user://saves/" + profile + "/" + get_parent().name + ".dat"
+	var file = FileAccess.open(file_path, FileAccess.WRITE)
 	file.store_var(metadata)
 
 
-func load_metadata_from_file() -> void:
-	# Read metadata
-	var path = SAVEDATA_FOLDER + get_parent().name + ".dat"
-	if FileAccess.file_exists(path):
-		var file = FileAccess.open(path, FileAccess.READ)
-		metadata = file.get_var()
+func load_meta() -> void:
+	var file_path = "user://saves/" + profile + get_parent().name + ".dat"
+	if FileAccess.file_exists(file_path):
+		metadata = FileAccess.open(file_path, FileAccess.READ).get_var()
 
-		# Load metadata
-		for metakey in metadata:
-			get_parent().set_meta(metakey, metadata[metakey])
+	for metakey in metadata:
+		get_parent().set_meta(metakey, metadata[metakey])
