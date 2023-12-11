@@ -43,7 +43,7 @@ func save_meta() -> void:
 
 
 func load_meta() -> void:
-	var file_path = "user://saves/" + profile + get_parent().name + ".dat"
+	var file_path = "user://saves/" + profile + "/" + get_parent().name + ".dat"
 	if FileAccess.file_exists(file_path):
 		metadata = FileAccess.open(file_path, FileAccess.READ).get_var()
 
